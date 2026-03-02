@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temario — Agentes Virtuales con n8n</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Scala Learning Palette */
+    --violet: #585D8A;
+    --violet-light: #6E74A0;
+    --violet-glow: rgba(88, 93, 138, 0.15);
+    --violet-glow-strong: rgba(88, 93, 138, 0.3);
+    --orange: #F86E15;
+    --orange-light: #FF8A3D;
+    --orange-glow: rgba(248, 110, 21, 0.15);
+    --orange-glow-strong: rgba(248, 110, 21, 0.3);
+    --lavender: #CDC9EF;
+    --lavender-glow: rgba(205, 201, 239, 0.1);
+    --warm-white: #F9F9FB;
+    --soft-black: #1E1E28;
+    --soft-black-light: #2A2A38;
+    --soft-black-mid: #32324A;
+
+    --surface: #FFFFFF;
+    --surface-card: #F5F5FA;
+    --surface-hover: #EEEEF5;
+    --text-primary: #1E1E28;
+    --text-secondary: #4A4A6A;
+    --text-muted: #7A78A0;
+    --border: rgba(88, 93, 138, 0.12);
+    --border-accent: rgba(248, 110, 21, 0.35);
+    --border-violet: rgba(88, 93, 138, 0.3);
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--surface);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Ambient Background ── */
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(88, 93, 138, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(88, 93, 138, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .bg-gradient-orb {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb-1 {
+    top: -200px;
+    right: -100px;
+    background: var(--violet);
+    opacity: 0.06;
+  }
+
+  .orb-2 {
+    bottom: -300px;
+    left: -200px;
+    background: var(--orange);
+    opacity: 0.04;
+  }
+
+  .orb-3 {
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--lavender);
+    opacity: 0.06;
+    width: 800px;
+    height: 800px;
+  }
+
+  /* ── Container ── */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+    animation: fadeUp 0.8s ease-out;
+  }
+
+  .header-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--orange);
+    background: var(--orange-glow);
+    border: 1px solid var(--border-accent);
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    margin-bottom: 1.5rem;
+  }
+
+  .header-tag .dot {
+    width: 6px;
+    height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .header h1 {
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 0.5rem;
+    color: #6B709D;
+  }
+
+  .header h1 .accent {
+    background: linear-gradient(135deg, var(--orange), var(--orange-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-sub {
+    font-size: 0.95rem;
+    color: #4A4A6A;
+    max-width: 520px;
+    margin: 0.8rem auto 0;
+    font-weight: 400;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-violet), var(--border-accent), var(--border-violet), transparent);
+    margin: 2rem 0;
+  }
+
+  /* ── Module Block ── */
+  .module {
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.8s ease-out both;
+  }
+
+  .module:nth-child(1) { animation-delay: 0.15s; }
+  .module:nth-child(2) { animation-delay: 0.2s; }
+  .module:nth-child(3) { animation-delay: 0.25s; }
+
+  .module-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    cursor: default;
+  }
+
+  .module-number {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--warm-white);
+    background: linear-gradient(135deg, var(--violet), var(--violet-light));
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .module-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #6B709D;
+  }
+
+  .module-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: var(--violet-glow);
+    border: 1px solid var(--border-violet);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .module-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--violet);
+  }
+
+  .module-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Topic Cards ── */
+  .topics {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .topic-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .topic-card:hover {
+    border-color: var(--border-violet);
+    background: var(--surface-hover);
+  }
+
+  .topic-main {
+    display: flex;
+    align-items: stretch;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .topic-index {
+    width: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+  }
+
+  .topic-card:hover .topic-index {
+    color: var(--orange);
+    background: var(--orange-glow);
+  }
+
+  .topic-body {
+    flex: 1;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .topic-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .topic-toggle {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+  }
+
+  .topic-toggle svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--text-muted);
+    transition: all 0.3s ease;
+  }
+
+  .topic-card.open .topic-toggle svg {
+    transform: rotate(180deg);
+    stroke: var(--orange);
+  }
+
+  /* Subtopics */
+  .subtopics {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+
+  .topic-card.open .subtopics {
+    max-height: 500px;
+  }
+
+  .subtopics-inner {
+    padding: 0 1.25rem 1rem;
+    padding-left: calc(52px + 1.25rem);
+  }
+
+  .sub-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .sub-item:first-child {
+    border-top: none;
+  }
+
+  .sub-bullet {
+    width: 5px;
+    height: 5px;
+    background: var(--orange);
+    border-radius: 50%;
+    margin-top: 0.45rem;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .sub-bullet.theory {
+    background: var(--violet);
+    opacity: 1;
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+  }
+
+  .sub-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .sub-label.theory {
+    color: var(--violet);
+    font-weight: 500;
+  }
+
+  .sub-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--violet);
+    background: var(--violet-glow);
+    border: 1px solid rgba(88, 93, 138, 0.2);
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    margin-left: 0.4rem;
+    flex-shrink: 0;
+    line-height: 1.4;
+  }
+
+  /* ── Project Cards ── */
+  .project-card {
+    background: linear-gradient(135deg, rgba(88, 93, 138, 0.08), rgba(248, 110, 21, 0.06));
+    border: 1px solid var(--border-accent);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.6rem;
+    transition: all 0.3s ease;
+  }
+
+  .project-card:hover {
+    background: linear-gradient(135deg, rgba(88, 93, 138, 0.15), rgba(248, 110, 21, 0.08));
+    transform: translateY(-2px);
+  }
+
+  .project-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--orange), var(--orange-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .project-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #FFFFFF;
+  }
+
+  .project-info {
+    flex: 1;
+  }
+
+  .project-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 0.2rem;
+  }
+
+  .project-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    animation: fadeUp 0.8s ease-out 0.4s both;
+  }
+
+  .footer p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .container { padding: 1.5rem 1rem 3rem; }
+    .module-header { flex-wrap: wrap; }
+    .module-line { display: none; }
+    .topic-body { padding: 0.85rem 1rem; }
+    .subtopics-inner { padding-left: calc(52px + 1rem); padding-right: 1rem; }
+    .project-card { flex-direction: column; text-align: center; padding: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-gradient-orb orb-1"></div>
+<div class="bg-gradient-orb orb-2"></div>
+<div class="bg-gradient-orb orb-3"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-tag"><span class="dot"></span> Temario del curso</div>
+    <h1>Agentes Virtuales <span class="accent">con n8n</span></h1>
+    <p class="header-sub">Diseña, construye y despliega agentes inteligentes con automatizaciones de nivel profesional usando n8n.</p>
+  </header>
+
+  <!-- ═══════════ MODULE 1 ═══════════ -->
+  <div class="module">
+    <div class="module-header">
+      <span class="module-number">Módulo 01</span>
+      <div class="module-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+      </div>
+      <span class="module-title">Fundamentos y automatización con n8n</span>
+      <span class="module-line"></span>
+    </div>
+
+    <div class="topics">
+
+      <!-- 1.1 -->
+      <div class="topic-card">
+        <div class="topic-main" onclick="this.parentElement.classList.toggle('open')">
+          <div class="topic-index">01</div>
+          <div class="topic-body">
+            <span class="topic-name">Primer contacto operativo con n8n Cloud</span>
+            <div class="topic-toggle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div>
+          </div>
+        </div>
+        <div class="subtopics">
+          <div class="subtopics-inner">
+            <div class="sub-item"><div class="sub-bullet theory"></div><span class="sub-label theory">Contenido teórico</span><span class="sub-tag">aprende</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Acceso y familiarización con la plataforma</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Construcción del primer workflow funcional, organización y preservación del trabajo</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1.2 -->
+      <div class="topic-card">
+        <div class="topic-main" onclick="this.parentElement.classList.toggle('open')">
+          <div class="topic-index">02</div>
+          <div class="topic-body">
+            <span class="topic-name">Triggers y eventos reales</span>
+            <div class="topic-toggle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div>
+          </div>
+        </div>
+        <div class="subtopics">
+          <div class="subtopics-inner">
+            <div class="sub-item"><div class="sub-bullet theory"></div><span class="sub-label theory">Contenido teórico</span><span class="sub-tag">aprende</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Comparación de ejecución manual y automática</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Triggers basados en tiempo (Cron)</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Triggers basados en eventos externos (Formulario)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1.3 -->
+      <div class="topic-card">
+        <div class="topic-main" onclick="this.parentElement.classList.toggle('open')">
+          <div class="topic-index">03</div>
+          <div class="topic-body">
+            <span class="topic-name">Manejo de datos en n8n</span>
+            <div class="topic-toggle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div>
+          </div>
+        </div>
+        <div class="subtopics">
+          <div class="subtopics-inner">
+            <div class="sub-item"><div class="sub-bullet theory"></div><span class="sub-label theory">Contenido teórico</span><span class="sub-tag">aprende</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Visualización, comprensión, transformación y preparación de datos</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1.4 -->
+      <div class="topic-card">
+        <div class="topic-main" onclick="this.parentElement.classList.toggle('open')">
+          <div class="topic-index">04</div>
+          <div class="topic-body">
+            <span class="topic-name">Errores, debugging y buenas prácticas</span>
+            <div class="topic-toggle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div>
+          </div>
+        </div>
+        <div class="subtopics">
+          <div class="subtopics-inner">
+            <div class="sub-item"><div class="sub-bullet theory"></div><span class="sub-label theory">Contenido teórico</span><span class="sub-tag">aprende</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Identificación de errores, corrección guiada y buenas prácticas</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1.5 -->
+      <div class="topic-card">
+        <div class="topic-main" onclick="this.parentElement.classList.toggle('open')">
+          <div class="topic-index">05</div>
+          <div class="topic-body">
+            <span class="topic-name">Integraciones más comunes</span>
+            <div class="topic-toggle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div>
+          </div>
+        </div>
+        <div class="subtopics">
+          <div class="subtopics-inner">
+            <div class="sub-item"><div class="sub-bullet theory"></div><span class="sub-label theory">Contenido teórico</span><span class="sub-tag">aprende</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Integración con correo electrónico, hojas de cálculo y Webhook como entrada universal</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1.6 -->
+      <div class="topic-card">
+        <div class="topic-main" onclick="this.parentElement.classList.toggle('open')">
+          <div class="topic-index">06</div>
+          <div class="topic-body">
+            <span class="topic-name">Automatizaciones intermedias reales</span>
+            <div class="topic-toggle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div>
+          </div>
+        </div>
+        <div class="subtopics">
+          <div class="subtopics-inner">
+            <div class="sub-item"><div class="sub-bullet theory"></div><span class="sub-label theory">Contenido teórico</span><span class="sub-tag">aprende</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Diseño del proceso y construcción del flujo completo</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════ MODULE 2 ═══════════ -->
+  <div class="module">
+    <div class="module-header">
+      <span class="module-number">Módulo 02</span>
+      <div class="module-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+      </div>
+      <span class="module-title">Agentes inteligentes e integración</span>
+      <span class="module-line"></span>
+    </div>
+
+    <div class="topics">
+
+      <!-- 2.1 -->
+      <div class="topic-card">
+        <div class="topic-main" onclick="this.parentElement.classList.toggle('open')">
+          <div class="topic-index">01</div>
+          <div class="topic-body">
+            <span class="topic-name">Introducción a agentes (reglas e IA) e integración con WhatsApp, Telegram y Monday</span>
+            <div class="topic-toggle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div>
+          </div>
+        </div>
+        <div class="subtopics">
+          <div class="subtopics-inner">
+            <div class="sub-item"><div class="sub-bullet theory"></div><span class="sub-label theory">Contenido teórico</span><span class="sub-tag">aprende</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Agente con IA, entrada/procesamiento del mensaje y acción de gestión</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div class="project-card">
+        <div class="project-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+        </div>
+        <div class="project-info">
+          <div class="project-label">Proyecto Final 1</div>
+          <div class="project-title">Asistente de Gestión de Solicitudes Académicas</div>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+        </div>
+        <div class="project-info">
+          <div class="project-label">Proyecto Final 2</div>
+          <div class="project-title">Asistente Académico de Seguimiento y Recordatorios</div>
+        </div>
+      </div>
+
+      <!-- 2.2 -->
+      <div class="topic-card">
+        <div class="topic-main" onclick="this.parentElement.classList.toggle('open')">
+          <div class="topic-index">02</div>
+          <div class="topic-body">
+            <span class="topic-name">Seguridad, credenciales y buenas prácticas</span>
+            <div class="topic-toggle"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></div>
+          </div>
+        </div>
+        <div class="subtopics">
+          <div class="subtopics-inner">
+            <div class="sub-item"><div class="sub-bullet theory"></div><span class="sub-label theory">Contenido teórico</span><span class="sub-tag">aprende</span></div>
+            <div class="sub-item"><div class="sub-bullet"></div><span class="sub-label">Gestión segura de credenciales y mejores prácticas en producción</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>Agentes Virtuales con n8n &mdash; Todos los derechos reservados</p>
+  </div>
+
+</div>
+
+<script>
+  // Open first topic by default for each module
+  document.addEventListener('DOMContentLoaded', () => {
+    const modules = document.querySelectorAll('.module');
+    modules.forEach(mod => {
+      const first = mod.querySelector('.topic-card');
+      if (first) first.classList.add('open');
+    });
+  });
+</script>
+
+</body>
+</html>
